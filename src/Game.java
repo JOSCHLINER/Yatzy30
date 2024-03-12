@@ -1,3 +1,5 @@
+import com.sun.javafx.PlatformUtil;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -19,10 +21,15 @@ public class Game {
         playerCount = board.getPlayerCount();
         for (int i = 0; i < playerCount; i++) {
             String playerName = board.getPlayerName();
-            players.add(new Player(playerName));
+            players.add(new Player(playerName, true));
         }
-    }
 
+        int botCount = board.getBotCount();
+        for (int i = 0; i < botCount; i++) {
+            players.add(new Player("Bot" + i, false));
+        }
+        playerCount += botCount;
+    }
     private void play() {
 
         int index = 0;
@@ -70,15 +77,30 @@ public class Game {
         board.requestEnter();
 
         // make dice roll
-        DiceRoll diceRoll = playerNormalDiceRoll(player);
+        int result = 0;
+        for (int dices = 6; dices > 0;) {
+            int[] scores = player.throwDices(dices);
+            int[] pickedResults;
+            if (isPlayer(player)) {
+                board.printThrowResults(scores);
+                pickedResults = board.pickResults(scores, dices);
+            }   else {
+                pickedResults = player.getBot().makeMove(scores);
+                board.printThrowResults(scores, pickedResults);
+            }
+            dices -= pickedResults.length;
+
+            result += this.calculateResult(pickedResults);
+
+            board.showSleep();
+        }
 
         // print out dice roll results
-        board.printThrowResults(diceRoll.throwResults, diceRoll.resultsPicked);
-        board.printThrowResult(diceRoll.totalSum);
+        board.printThrowResult(result);
 
         // decreasing score of own score or next player
-        if (diceRoll.totalSum > 30) {
-            int decrease = this.decreaseDiceThrow(player, diceRoll.totalSum % 10);
+        if (result > 30) {
+            int decrease = this.decreaseDiceThrow(player, result % 10);
 
             board.printScoreDecreaseMessage(nextPlayer, decrease);
             this.decreaseScore(nextPlayer, decrease);
@@ -90,23 +112,6 @@ public class Game {
 
             board.printPlayerScore(player);
         }
-    }
-
-    private DiceRoll playerNormalDiceRoll(Player player) {
-        int result = 0;
-        int[][] throwResults = new int[6][6];
-        int[] resultsPicked = new int[6];
-        for (int dices = 6; dices > 0; dices--) {
-            int[] scores = player.throwDices(dices);
-            throwResults[6 - dices] = scores;
-
-            int resultPicked = this.pickResult(scores);
-
-            resultsPicked[6 - dices] = resultPicked;
-            result += resultPicked;
-        }
-
-        return new DiceRoll(throwResults, resultsPicked, result);
     }
 
     private int decreaseDiceThrow(Player player, int goal) {
@@ -142,17 +147,6 @@ public class Game {
         }
     }
 
-    private int pickResult(int[] scores) {
-        int maxScore = Integer.MIN_VALUE;
-        for (int score : scores) {
-            if (score > maxScore) {
-                maxScore = score;
-            }
-        }
-
-        return maxScore;
-    }
-
     private int calculateDecreaseAmount(int[] rolls, int goal) {
         int count = 0;
         for (int roll : rolls) {
@@ -162,5 +156,18 @@ public class Game {
         }
 
         return count * goal;
+    }
+
+    public boolean isPlayer(Player player) {
+        return player.isPlayer();
+    }
+
+    private int calculateResult(int[] scores) {
+
+        int result = 0;
+        for (int score : scores) {
+            result += score;
+        }
+        return result;
     }
 }

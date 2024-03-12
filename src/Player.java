@@ -1,12 +1,18 @@
 import java.lang.reflect.Array;
 
 public class Player {
-    private int score = 10;
+    private int score = 24;
     private boolean isAlive = true;
+    private boolean isPlayer;
+    private Bot bot;
 
     private String name = "";
-    public Player(String name) {
+    public Player(String name, boolean isPlayer) {
         this.name = name;
+        this.isPlayer = isPlayer;
+        if (!isPlayer) {
+            this.createBot();
+        }
     }
 
     @Override
@@ -39,6 +45,7 @@ public class Player {
     private boolean checkLifeStatus() {
         if (this.score <= 0) {
             this.isAlive = false;
+            score = 0;
             return false;
         }
 
@@ -63,12 +70,22 @@ public class Player {
         return scores;
     }
 
-
     public boolean isAlive() {
         return isAlive;
     }
 
     private int throwDice(){
         return (int) Math.ceil(Math.random()*6);
+    }
+
+    public boolean isPlayer() {
+        return isPlayer;
+    }
+
+    private void createBot() {
+        this.bot = new BotGreedy();
+    }
+    public Bot getBot() {
+        return bot;
     }
 }

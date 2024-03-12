@@ -1,2 +1,3 @@
-package PACKAGE_NAME;public class Bot {
+interface Bot {
+    int[] makeMove(int[] throwResults);
 }
