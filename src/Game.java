@@ -1,8 +1,9 @@
-import com.sun.javafx.PlatformUtil;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * Class working as Core of the Game.
+ */
 public class Game {
     Board board = new Board();
     ArrayList<Player> players = new ArrayList<>();
@@ -11,11 +12,12 @@ public class Game {
         board.printGameStart();
         this.createPlayers();
 
-        // call function to run game
+        // start game
         this.play();
     }
 
     int playerCount;
+
     private void createPlayers() {
 
         playerCount = board.getPlayerCount();
@@ -30,6 +32,7 @@ public class Game {
         }
         playerCount += botCount;
     }
+
     private void play() {
 
         int index = 0;
@@ -61,7 +64,7 @@ public class Game {
 
             if (index == startindex && wentRound) {
                 return -1;
-            }   else {
+            } else {
                 wentRound = true;
             }
 
@@ -71,34 +74,19 @@ public class Game {
     }
 
     private void update(Player player, Player nextPlayer) {
-        board.printDivider();
         board.printPlayerTurn(player);
 
-        board.requestEnter();
-
-        // make dice roll
-        int result = 0;
-        for (int dices = 6; dices > 0;) {
-            int[] scores = player.throwDices(dices);
-            int[] pickedResults;
-            if (isPlayer(player)) {
-                board.printThrowResults(scores);
-                pickedResults = board.pickResults(scores, dices);
-            }   else {
-                pickedResults = player.getBot().makeMove(scores);
-                board.printThrowResults(scores, pickedResults);
-            }
-            dices -= pickedResults.length;
-
-            result += this.calculateResult(pickedResults);
-
-            board.showSleep();
-        }
+        // let player make move
+        int result = rollDices(player);
 
         // print out dice roll results
         board.printThrowResult(result);
 
-        // decreasing score of own score or next player
+        // taking the result and making move with that
+        this.manageResult(player, nextPlayer, result);
+    }
+
+    private void manageResult(Player player, Player nextPlayer, int result) {
         if (result > 30) {
             int decrease = this.decreaseDiceThrow(player, result % 10);
 
@@ -106,7 +94,7 @@ public class Game {
             this.decreaseScore(nextPlayer, decrease);
             board.printPlayerScore(nextPlayer);
 
-        }   else {
+        } else {
             board.printSelfScoreDecreasionMessage();
             this.decreaseScore(player);
 
@@ -114,9 +102,36 @@ public class Game {
         }
     }
 
+    private int rollDices(Player player) {
+
+        int result = 0;
+        for (int dices = 6; dices > 0; ) {
+
+            int[] scores = player.throwDices(dices);
+            int[] pickedResults;
+
+            if (isPlayer(player)) {
+
+                board.printThrowResults(scores);
+                pickedResults = board.pickResults(scores, dices);
+
+            } else {
+
+                pickedResults = player.getBot().makeMove(scores);
+                board.printThrowResults(scores, pickedResults);
+
+            }
+            dices -= pickedResults.length;
+            result += this.calculateResult(pickedResults);
+
+            board.showSleep();
+        }
+
+        return result;
+    }
+
     private int decreaseDiceThrow(Player player, int goal) {
         int[] results = player.throwDices(6);
-
         board.printDecreaseDiceThrow(results, goal);
 
         return calculateDecreaseAmount(results, goal);
@@ -125,6 +140,7 @@ public class Game {
     /**
      * Decreasing the score of player.
      * If the players score reaches 0, a message is printed and the playerCount is reduced.
+     *
      * @param player
      */
     private void decreaseScore(Player player) {
@@ -137,6 +153,7 @@ public class Game {
     /**
      * Decreasing the score of player.
      * If the players score reaches 0, a message is printed and the playerCount is reduced.
+     *
      * @param player
      * @param decrease
      */
