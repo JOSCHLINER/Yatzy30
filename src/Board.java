@@ -20,7 +20,7 @@ public class Board {
         int pickedBorderLength = Math.max(7, n * 4 - 1);
         String pickedBorder = createFillerString('─', pickedBorderLength + 1);
 
-        String out = " ┌───────────────────────┬" +
+        String out = "Pick the dices you wish to save by writing their value. You have to pick at least one and can pick as many as you like. Once you feel that you have picked all the dices you want enter b\n ┌───────────────────────┬" +
                 pickedBorder + "┐\n " +
                 "│ Rolled                │ Picked" +
                 createFillerString(' ', pickedBorderLength - 6) +
